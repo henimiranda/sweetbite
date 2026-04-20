@@ -1,6 +1,15 @@
 <?php
+ob_start();
 session_start();
-include '../backend/koneksi.php';
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+include 'backend/koneksi.php';
+
+// CEK KONEKSI
+if(!$conn){
+    die("Koneksi database gagal: " . mysqli_connect_error());
+}
 
 // LOGIN
 if(isset($_POST['login'])){
@@ -8,6 +17,11 @@ if(isset($_POST['login'])){
     $p = $_POST['password'];
 
     $cek = mysqli_query($conn,"SELECT * FROM users WHERE username='$u' AND password='$p'");
+
+    if(!$cek){
+        die("Query error: " . mysqli_error($conn));
+    }
+
     $data = mysqli_fetch_assoc($cek);
 
     if(mysqli_num_rows($cek)>0){
@@ -15,9 +29,11 @@ if(isset($_POST['login'])){
         $_SESSION['role']=$data['role'];
 
         if($data['role']=='admin'){
-            header("Location: dashboard.php");
+            header("Location: frontend/dashboard.php");
+            exit;
         }else{
-            header("Location: customer.php");
+            header("Location: frontend/customer.php");
+            exit;
         }
     }else{
         echo "<script>alert('Login gagal');</script>";
@@ -33,10 +49,14 @@ if(isset($_POST['register'])){
     $no_hp    = $_POST['no_hp'];
     $alamat   = $_POST['alamat'];
 
-    mysqli_query($conn,"INSERT INTO users 
+    $insert = mysqli_query($conn,"INSERT INTO users 
     (username,password,role,nama_lengkap,email,no_hp,alamat) 
     VALUES 
     ('$username','$password','customer','$nama','$email','$no_hp','$alamat')");
+
+    if(!$insert){
+        die("Register error: " . mysqli_error($conn));
+    }
 
     echo "<script>alert('Registrasi berhasil! Silakan login');</script>";
 }
@@ -56,14 +76,14 @@ body {
     font-family:Arial;
 }
 
-/* BACKGROUND IMAGE */
+/* BACKGROUND IMAGE (SUDAH DIPERBAIKI) */
 .bg {
     position: fixed;
     top:0;
     left:0;
     width:100%;
     height:100%;
-    background: url('../uploads/vidio.mp4') no-repeat center center;
+    background: url('uploads/bg.jpg') no-repeat center center;
     background-size: cover;
     z-index: -2;
 }
@@ -142,7 +162,6 @@ body {
 
 <body>
 
-<!-- BACKGROUND -->
 <div class="bg"></div>
 <div class="overlay"></div>
 
@@ -150,7 +169,6 @@ body {
 
     <h3>🍰 SweetBite</h3>
 
-    <!-- TAB -->
     <ul class="nav nav-tabs">
         <li class="nav-item">
             <a class="nav-link active" data-bs-toggle="tab" href="#login">Login</a>
@@ -162,7 +180,6 @@ body {
 
     <div class="tab-content mt-3">
 
-        <!-- LOGIN -->
         <div class="tab-pane fade show active" id="login">
             <form method="POST">
                 <input type="text" name="username" class="form-control mb-2" placeholder="Username" required>
@@ -172,10 +189,8 @@ body {
             </form>
         </div>
 
-        <!-- REGISTER -->
         <div class="tab-pane fade" id="register">
             <form method="POST">
-
                 <input type="text" name="nama" class="form-control mb-2" placeholder="Nama Lengkap" required>
                 <input type="text" name="username" class="form-control mb-2" placeholder="Username" required>
                 <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
@@ -184,7 +199,6 @@ body {
                 <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
 
                 <button name="register" class="btn btn-success w-100">Daftar</button>
-
             </form>
         </div>
 
